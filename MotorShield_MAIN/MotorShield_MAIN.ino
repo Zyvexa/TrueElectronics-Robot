@@ -1,29 +1,3 @@
-#define IR_1 16753245  // кнопки на пульте
-#define IR_2 16736925
-#define IR_3 16769565
-#define IR_4 16720605
-#define IR_5 16712445
-#define IR_6 16761405
-#define IR_7 16769055
-#define IR_8 16754775
-#define IR_9 16748655
-#define IR_0 16750695
-
-#define IR_STAR 16738455
-#define IR_LATTICE 16756815
-
-#define IR_UP 16718055
-#define IR_DOWN 16730805
-#define IR_LEFT 16716015
-#define IR_RIGHT 16734885
-
-#define IR_OK 16726215
-
-
-#include <iarduino_IR_RX.h>  // Подключаем библиотеку для работы с ИК-приёмником
-#define IR_PORT A3
-iarduino_IR_RX IR(IR_PORT);  // Объявляем объект IR, с указанием вывода к которому подключён ИК-приёмник
-
 enum MAP_point {
   P13,
   P14,
@@ -100,7 +74,6 @@ void setup() {
   pinMode(RIGHT_CENTRAL_SENSOR, INPUT);
   pinMode(LEFT_CENTRAL_SENSOR, INPUT);
   Serial.begin(9600);
-  IR.begin();  // Инициируем работу с ИК-приёмником
 }
 enum Movement {
   to_crossroad,
@@ -111,87 +84,9 @@ enum Movement {
   crossroad_L_turn_left
 };
 
-int mysor = 0;
+
 void loop() {
-  
-  if (IR_READER() == IR_1) {
-    way_from_to(my_position, P13);
-    mysor = Way_cost;
-    way_from_to(my_position, P14);
-    if (mysor > Way_cost) way_from_to(my_position, P14);
-    else way_from_to(my_position, P13);
-    map_worker();
-  }
-  if (IR_READER() == IR_2) {
-    way_from_to(my_position, P22);
-    mysor = Way_cost;
-    way_from_to(my_position, P21);
-    if (mysor > Way_cost) way_from_to(my_position, P21);
-    else way_from_to(my_position, P22);
-    map_worker();
-  }
-  if (IR_READER() == IR_3) {
-    way_from_to(my_position, P32);
-    mysor = Way_cost;
-    way_from_to(my_position, P31);
-    if (mysor > Way_cost) way_from_to(my_position, P31);
-    else way_from_to(my_position, P32);
-    map_worker();
-  }
-  if (IR_READER() == IR_4) {
-    way_from_to(my_position, P42);
-    mysor = Way_cost;
-    way_from_to(my_position, P41);
-    if (mysor > Way_cost) {
-      way_from_to(my_position, P43);
-      mysor = Way_cost;
-      way_from_to(my_position, P41);
-      if (mysor > Way_cost) way_from_to(my_position, P41);
-      else way_from_to(my_position, P43);
-    } else {
-      way_from_to(my_position, P43);
-      mysor = Way_cost;
-      way_from_to(my_position, P42);
-      if (mysor > Way_cost) way_from_to(my_position, P42);
-      else way_from_to(my_position, P43);
-    }
-    map_worker();
-  }
-  if (IR_READER() == IR_5) {
-    way_from_to(my_position, P53);
-    mysor = Way_cost;
-    way_from_to(my_position, P51);
-    if (mysor > Way_cost) way_from_to(my_position, P51);
-    else way_from_to(my_position, P53);
-    map_worker();
-  }
-  if (IR_READER() == IR_6) {
-    way_from_to(my_position, P63);
-    mysor = Way_cost;
-    way_from_to(my_position, P64);
-    if (mysor > Way_cost) {
-      way_from_to(my_position, P64);
-      mysor = Way_cost;
-      way_from_to(my_position, P61);
-      if (mysor > Way_cost) way_from_to(my_position, P61);
-      else way_from_to(my_position, P64);
-    } else {
-      way_from_to(my_position, P63);
-      mysor = Way_cost;
-      way_from_to(my_position, P61);
-      if (mysor > Way_cost) way_from_to(my_position, P61);
-      else way_from_to(my_position, P63);
-    }
-    map_worker();
-  }
-  if (IR_READER() == IR_7) {
-    way_from_to(my_position, P74);
-    mysor = Way_cost;
-    way_from_to(my_position, P72);
-    if (mysor > Way_cost) way_from_to(my_position, P72);
-    else way_from_to(my_position, P74);
-    map_worker();
-  }
+  ;
 }
 
 
@@ -474,13 +369,6 @@ void dijkstra(Node nodes[], int numNodes, Edge edges[], int numEdges,
   }
   return distance[end];
 }
-
-
-unsigned long IR_READER() {
-  if (IR.check()) return IR.data;
-  else return -1;
-}
-
 
 void movement(int directions) {
   switch (directions) {
