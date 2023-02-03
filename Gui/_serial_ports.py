@@ -22,19 +22,22 @@ def serial_ports():
 
 
 # открытие порта
-def open_serial(com, a1=9600):
-    ser = serial.Serial(com, int(a1))
-    return ser
+def open_serial(com, bod=9600, timeout=1):
+    try:
+        ser = serial.Serial(com, int(bod), timeout=timeout)
+        return ser
+    except serial.serialutil.SerialException:
+        print("could not open port")
+
 
 
 # Закрытие порта
-def close_serial(com):
-    com.close()
+def close_serial(ser):
+    ser.close()
 
 
-def parse_serial(com, bod=9600):
+def parse_serial(ser):
     # 1011 90 1020 100 820 90
-    ser = serial.Serial(com, int(bod), timeout=1)
     start = b'1011'
     out = []
 
@@ -48,4 +51,5 @@ def parse_serial(com, bod=9600):
 
 
 if __name__ == '__main__':
-    print(parse_serial('COM8'))
+    ser = serial.Serial('COM8', timeout=1)
+    print(parse_serial(ser))

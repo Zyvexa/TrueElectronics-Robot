@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QRect
 from PyQt5 import QtBluetooth as QtBt
+from get_data_thread import dataHandler
 from gui import Ui_MainWindow
 from _serial_ports import *
 import sys
@@ -17,15 +18,17 @@ class App(QtWidgets.QMainWindow):
 
         self.cur_connection = None
 
+        self.MK_data = dataHandler(self)
+        self.MK_data.mysignal.connect(self.data_from_MK, QtCore.Qt.QueuedConnection)
 
         self.ui.progressBar_2.setHidden(True)
         self.ui.label_7.setText('Current mode: Default')
-        self.timer_MK = QtCore.QTimer()
+
 
         self.ui.actionBLEScan.triggered.connect(self.scan_BLE)  # scan bluetooth devices
         self.ui.actionCOMScan.triggered.connect(self.scan_com)
 
-        self.ui.listWidget_2.itemDoubleClicked.connect(self.connect_)
+        self.ui.listWidget_2.itemDoubleClicked.connect(self.connect_)  # подключение к айтему на который мы кликнули
 
         self.ui.verticalSlider.sliderMoved.connect(self.slidebar_label_1)
         self.ui.verticalSlider.sliderReleased.connect(self.slidebar_label_1)
@@ -33,10 +36,6 @@ class App(QtWidgets.QMainWindow):
         self.ui.verticalSlider_2.sliderReleased.connect(self.slidebar_label_2)
 
         self.ui.pushButton.clicked.connect(self.apply_monitor)
-
-    def timer_for_MK(self):
-        self.timer_MK.start(1000)
-        self.timer_MK.timeout.connect(self.data_from_MK)
 
     def slidebar_label_1(self):
         self.ui.label_6.setText(str(self.ui.verticalSlider.value()))
@@ -50,8 +49,7 @@ class App(QtWidgets.QMainWindow):
         else:
             self.ui.label_7.setText('Current mode: Default')
 
-        #TODO: do something with sliders
-
+        # TODO: do something with sliders
 
     def connect_(self, item):  # двойное нажатие на айтем в лист вью и адрес добавляется в текущее подключение
         i_text = str(item.text())
@@ -62,12 +60,13 @@ class App(QtWidgets.QMainWindow):
             com = i_text.split(':')[0]
             print(com)
             self.cur_connection = com
-        self.timer_for_MK()
+        self.MK_data.start()  # старт потока
         self.ui.label_9.setText(f'Current connection: {self.cur_connection}')
 
-    def data_from_MK(self):  # изменение батареи и окнок датчиков от данных с МК
+    def data_from_MK(self, data_thread):  # изменение батареи и окнок датчиков от данных с МК
         if self.cur_connection.startswith('COM'):
-            data = parse_serial(self.cur_connection)
+            data = data_thread
+            print(data)# parse_serial(self.cur_connection)  # signal of thread
             if len(data) > 1:
                 self.ui.progressBar.setValue(int(data[1]))
 
