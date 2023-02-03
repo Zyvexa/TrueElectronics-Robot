@@ -37,6 +37,7 @@ def close_serial(ser):
 
 
 def parse_serial(ser):
+    # 1011 это старт сообщения
     # 1011 90 1020 100 820 90
     start = b'1011'
     out = []

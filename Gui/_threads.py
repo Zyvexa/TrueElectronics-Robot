@@ -26,7 +26,7 @@ class MyWindow(QtWidgets.QWidget):
         self.vbox.addWidget(self.button)
         self.setLayout(self.vbox)
 
-        self.mythread = MyThread(self)  # Создаем экземпляр класса
+        self.mythread = MyThread(self)  # Создаем поток
         self.button.clicked.connect(self.on_clicked)
 
         self.mythread.started.connect(self.on_started)

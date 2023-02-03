@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QRect
 from PyQt5 import QtBluetooth as QtBt
 from get_data_thread import dataHandler
+from bluetooth_scanner import BLEHandler
 from gui import Ui_MainWindow
 from _serial_ports import *
 import sys
@@ -21,9 +22,14 @@ class App(QtWidgets.QMainWindow):
         self.MK_data = dataHandler(self)
         self.MK_data.mysignal.connect(self.data_from_MK, QtCore.Qt.QueuedConnection)
 
+        self.BLE_handl = BLEHandler(self)
+        self.BLE_handl.started.connect(self.on_start_BL)
+        self.BLE_handl.finished.connect(self.on_finish_BL)
+        self.BLE_handl.mysignal.connect(self.add_device_on_screen, QtCore.Qt.QueuedConnection)
+        self.BLE_handl.proc_signal.connect(self.scan_progress, QtCore.Qt.QueuedConnection)
+
         self.ui.progressBar_2.setHidden(True)
         self.ui.label_7.setText('Current mode: Default')
-
 
         self.ui.actionBLEScan.triggered.connect(self.scan_BLE)  # scan bluetooth devices
         self.ui.actionCOMScan.triggered.connect(self.scan_com)
@@ -58,46 +64,29 @@ class App(QtWidgets.QMainWindow):
             self.cur_connection = mac
         if i_text.startswith('COM'):
             com = i_text.split(':')[0]
-            print(com)
+            # print(com)
             self.cur_connection = com
         self.MK_data.start()  # старт потока
         self.ui.label_9.setText(f'Current connection: {self.cur_connection}')
 
+    def sensor_col(self, frame, value):
+        color = (value * 255) // 1024
+        sheet = f'border: 1px solid black;' \
+                f'background-color: rgb({color}, {color}, {color});'
+
+        frame.setStyleSheet(f'QFrame{sheet}')
+
     def data_from_MK(self, data_thread):  # изменение батареи и окнок датчиков от данных с МК
         if self.cur_connection.startswith('COM'):
             data = data_thread
-            print(data)# parse_serial(self.cur_connection)  # signal of thread
+            print(data)  # signal from thread
             if len(data) > 1:
                 self.ui.progressBar.setValue(int(data[1]))
 
-                col_6 = self.convert_col_sensors(int(data[2]))
-                colf_6 = f'border: 1px solid black;' \
-                         f'background-color: rgb({col_6}, {col_6}, {col_6});'
-
-                self.ui.frame_6.setStyleSheet(f'QFrame{colf_6}')
-
-                col_7 = self.convert_col_sensors(int(data[3]))
-                colf_7 = f'border: 1px solid black;' \
-                         f'background-color: rgb({col_7}, {col_7}, {col_7});'
-
-                self.ui.frame_7.setStyleSheet(f'QFrame{colf_7}')
-
-                col_8 = self.convert_col_sensors(int(data[4]))
-                colf_8 = f'border: 1px solid black;' \
-                         f'background-color: rgb({col_8}, {col_8}, {col_8});'
-
-                self.ui.frame_8.setStyleSheet(f'QFrame{colf_8}')
-
-                col_9 = self.convert_col_sensors(int(data[5]))
-                colf_9 = f'border: 1px solid black;' \
-                         f'background-color: rgb({col_9}, {col_9}, {col_9});'
-
-                self.ui.frame_9.setStyleSheet(f'QFrame{colf_9}')
-
-    def convert_col_sensors(self, value):  # конвертация диапазона датчиков диапазон rgb
-        out = (value * 255) // 1024
-        # print(out)
-        return out
+                self.sensor_col(self.ui.frame_6, int(data[2]))  # цвет в зависимости от показаний датчика от 0 до 1024
+                self.sensor_col(self.ui.frame_7, int(data[3]))
+                self.sensor_col(self.ui.frame_8, int(data[4]))
+                self.sensor_col(self.ui.frame_9, int(data[5]))
 
     def scan_com(self):  # сканирование комп портов и добавление в лист вью
         for com in serial_ports():
@@ -105,41 +94,26 @@ class App(QtWidgets.QMainWindow):
             self.coms.add(out)
             self.ui.listWidget_2.addItem(out)
 
-    def scan_BLE(self):  # сканирование БЛ с прогресс баром и добавлением в лист вью
+    def on_start_BL(self):
         self.ui.progressBar_2.setHidden(False)
-        for i in range(101):
-            self.ui.progressBar_2.setValue(i)
-            self.scan_for_devices()
+
+    def on_finish_BL(self):
         self.ui.progressBar_2.setHidden(True)
 
-    def add_device_on_screen(self):  # добавляем элементы в лист вью
+    def scan_progress(self, v):
+        self.ui.progressBar_2.setValue(v)
+
+    def scan_BLE(self):  # сканирование БЛ с прогресс баром и добавлением в лист вью
+        self.BLE_handl.start()
+
+
+    def add_device_on_screen(self, devs):  # добавляем элементы в лист вью
         self.ui.listWidget_2.clear()
         # for device in self.devices:
         #     self.ui.listWidget_2.addItem(f'{device[0]}: {device[1]}')
         # сокращённый цикл для добавления элементов в лист вью
-        [self.ui.listWidget_2.addItem(f'(BL) {device[0]}: {device[1]}') for device in self.devices]
+        [self.ui.listWidget_2.addItem(f'(BL) {device[0]}: {device[1]}') for device in devs]
         [self.ui.listWidget_2.addItem(com) for com in self.coms]
-
-    def display_status(self):  # добавление БЛ устроиств в список с ними
-        dev = self.agent.discoveredDevices()
-        if len(dev) > 0:
-            # print(dev[0].name(), dev[0].address().toString())
-            self.devices.add((dev[0].name(), dev[0].address().toString()))
-            self.add_device_on_screen()
-
-    def foo(self, *args, **kwargs):  # TODO: что это???
-        ...
-
-    def scan_for_devices(self):  # сканирование БЛ диапазона
-
-        self.agent = QtBt.QBluetoothDeviceDiscoveryAgent(self)
-        self.agent.deviceDiscovered.connect(self.display_status)
-        self.agent.error.connect(self.foo)
-        self.agent.finished.connect(self.foo)
-        self.agent.canceled.connect(self.foo)
-        self.agent.setLowEnergyDiscoveryTimeout(1000)
-
-        self.agent.start(QtBt.QBluetoothDeviceDiscoveryAgent.DiscoveryMethod(2))
 
 
 if __name__ == "__main__":  # запуск всего
