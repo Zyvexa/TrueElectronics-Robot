@@ -23,3 +23,5 @@ class dataHandler(QtCore.QThread):
                 print(out)
                 self.mysignal.emit(out)
                 sleep(0.2)
+        else:
+            self.ser.close()

@@ -43,6 +43,10 @@ class App(QtWidgets.QMainWindow):
 
         self.ui.pushButton.clicked.connect(self.apply_monitor)
 
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.MK_data.isRun = False
+        self.BLE_handl.isRun = False
+
     def slidebar_label_1(self):
         self.ui.label_6.setText(str(self.ui.verticalSlider.value()))
 
@@ -83,16 +87,25 @@ class App(QtWidgets.QMainWindow):
             if len(data) > 1:
                 self.ui.progressBar.setValue(int(data[1]))
 
-                self.sensor_col(self.ui.frame_6, int(data[2]))  # цвет в зависимости от показаний датчика от 0 до 1024
-                self.sensor_col(self.ui.frame_7, int(data[3]))
-                self.sensor_col(self.ui.frame_8, int(data[4]))
-                self.sensor_col(self.ui.frame_9, int(data[5]))
+                # цвет в зависимости от показаний датчика от 0 до 1024
+                self.sensor_col(self.ui.frame_6, int(data[2]))  # top sensor
+                self.sensor_col(self.ui.frame_18, int(data[2]))
+
+                self.sensor_col(self.ui.frame_7, int(data[3]))  # right sensor
+                self.sensor_col(self.ui.frame_19, int(data[3]))
+
+                self.sensor_col(self.ui.frame_8, int(data[4]))  # left sensor
+                self.sensor_col(self.ui.frame_20, int(data[4]))
+
+                self.sensor_col(self.ui.frame_9, int(data[5]))  # bottom sensor
+                self.sensor_col(self.ui.frame_21, int(data[5]))
 
     def scan_com(self):  # сканирование комп портов и добавление в лист вью
+
         for com in serial_ports():
             out = f'{com["port"]}: {com["desc"]}'
             self.coms.add(out)
-            self.ui.listWidget_2.addItem(out)
+            self.add_device_on_screen(self.devices)
 
     def on_start_BL(self):
         self.ui.progressBar_2.setHidden(False)
@@ -109,6 +122,7 @@ class App(QtWidgets.QMainWindow):
 
     def add_device_on_screen(self, devs):  # добавляем элементы в лист вью
         self.ui.listWidget_2.clear()
+        self.devices = devs
         # for device in self.devices:
         #     self.ui.listWidget_2.addItem(f'{device[0]}: {device[1]}')
         # сокращённый цикл для добавления элементов в лист вью
