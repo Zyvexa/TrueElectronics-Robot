@@ -435,6 +435,8 @@ void movement(int directions) {
       break;
   }
 }
+int max_color = 0;
+int min_color = 1023;
 int old_left_central_sensor = 0;
 int old_right_central_sensor = 0;
 int old_left_sensor = 0;
@@ -442,22 +444,40 @@ int old_right_sensor = 0;
 void line(int max_speed, int min_speed) {
   int right_speed = 0;
   int left_speed = 0;
-  int left_central_sensor = digitalRead(LEFT_CENTRAL_SENSOR);
-  int right_central_sensor = digitalRead(RIGHT_CENTRAL_SENSOR);
-  int left_sensor = digitalRead(LEFT_SENSOR);
-  int right_sensor = digitalRead(RIGHT_SENSOR);
+  int left_central_sensor = analogRead(LEFT_CENTRAL_SENSOR);
+  int right_central_sensor = analogRead(RIGHT_CENTRAL_SENSOR);
+  int left_sensor = analogRead(LEFT_SENSOR);
+  int right_sensor = analogRead(RIGHT_SENSOR);
 
-  if (left_central_sensor == 0 and right_central_sensor == 0) {
-    if ((old_left_central_sensor == 1 and old_right_central_sensor == 0) or (left_sensor == 1 or old_left_sensor == 1)) {
+
+  if (left_central_sensor > max_color) max_color = left_central_sensor;
+  if (right_central_sensor > max_color) max_color = right_central_sensor;
+  if (left_sensor > max_color) max_color = left_sensor;
+  if (right_sensor > max_color) max_color = right_sensor;
+
+  if (right_sensor < min_color) min_color = right_sensor;
+  if (left_sensor < min_color) min_color = left_sensor;
+  if (right_central_sensor < min_color) min_color = right_central_sensor;
+  if (left_central_sensor < min_color) min_color = left_central_sensor;
+
+  int middle_color = min_color + (0.4 * (max_color - min_color));
+
+  if (left_central_sensor < middle_color and right_central_sensor < middle_color) {
+    if ((old_left_central_sensor > middle_color and old_right_central_sensor < middle_color) or (left_sensor > middle_color or old_left_sensor > middle_color)) {
       right_speed = max_speed;
       left_speed = min_speed;
-    } else if ((old_left_central_sensor == 0 and old_right_central_sensor == 1) or (right_sensor == 1 or old_right_sensor == 1)) {
+    } else if ((old_left_central_sensor < middle_color and old_right_central_sensor > middle_color) or (right_sensor > middle_color or old_right_sensor > middle_color)) {
       right_speed = min_speed;
       left_speed = max_speed;
+    } else {
+      ;
+      // right_speed = max_speed;
+      // left_speed = max_speed;
     }
   } else {
-    left_speed = map(right_central_sensor, 0, 1, min_speed, max_speed);
-    right_speed = map(left_central_sensor, 0, 1, min_speed, max_speed);
+
+    left_speed = map(right_central_sensor, min_color, max_color, min_speed, max_speed);
+    right_speed = map(left_central_sensor, min_color, max_color, min_speed, max_speed);
     old_right_central_sensor = right_central_sensor;
     old_left_central_sensor = left_central_sensor;
     old_left_sensor = left_sensor;
