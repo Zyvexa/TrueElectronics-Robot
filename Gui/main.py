@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QRect
 from PyQt5 import QtBluetooth as QtBt
 from get_data_thread import dataHandler
-from bluetooth_scanner import BLEHandler
+
 from gui import Ui_MainWindow
 from _serial_ports import *
 import sys
@@ -19,14 +19,15 @@ class App(QtWidgets.QMainWindow):
 
         self.cur_connection = None
 
+        self.agent = QtBt.QBluetoothDeviceDiscoveryAgent(self)
+        self.agent.deviceDiscovered.connect(self.display_status)
+        self.agent.error.connect(self.foo)
+        self.agent.finished.connect(self.foo)
+        self.agent.canceled.connect(self.foo)
+        self.agent.setLowEnergyDiscoveryTimeout(1000)
+
         self.MK_data = dataHandler(self)
         self.MK_data.mysignal.connect(self.data_from_MK, QtCore.Qt.QueuedConnection)
-
-        self.BLE_handl = BLEHandler(self)
-        self.BLE_handl.started.connect(self.on_start_BL)
-        self.BLE_handl.finished.connect(self.on_finish_BL)
-        self.BLE_handl.mysignal.connect(self.add_device_on_screen, QtCore.Qt.QueuedConnection)
-        self.BLE_handl.proc_signal.connect(self.scan_progress, QtCore.Qt.QueuedConnection)
 
         self.ui.progressBar_2.setHidden(True)
         self.ui.label_7.setText('Current mode: Default')
@@ -45,7 +46,6 @@ class App(QtWidgets.QMainWindow):
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.MK_data.isRun = False
-        self.BLE_handl.isRun = False
 
     def slidebar_label_1(self):
         self.ui.label_6.setText(str(self.ui.verticalSlider.value()))
@@ -66,11 +66,13 @@ class App(QtWidgets.QMainWindow):
         if i_text.startswith('(BL)'):
             mac = i_text[-17:-1]
             self.cur_connection = mac
+            self.connect_BLE()
+
         if i_text.startswith('COM'):
             com = i_text.split(':')[0]
             # print(com)
             self.cur_connection = com
-        self.MK_data.start()  # старт потока
+            self.MK_data.start()  # старт потока
         self.ui.label_9.setText(f'Current connection: {self.cur_connection}')
 
     def sensor_col(self, frame, value):
@@ -79,6 +81,29 @@ class App(QtWidgets.QMainWindow):
                 f'background-color: rgb({color}, {color}, {color});'
 
         frame.setStyleSheet(f'QFrame{sheet}')
+
+    def connect_BLE(self):
+
+        self.sock = QtBt.QBluetoothSocket(QtBt.QBluetoothServiceInfo.RfcommProtocol)
+
+        self.sock.connected.connect(self.connectedToBluetooth)
+        self.sock.readyRead.connect(self.receivedBluetoothMessage)
+        self.sock.error.connect(self.socketError)
+
+        port = 1
+        self.connectedToBluetooth()
+        self.sock.connectToService(QtBt.QBluetoothAddress(self.cur_connection), port)
+
+    def socketError(self, error):
+        print(self.sock.errorString())
+
+    def connectedToBluetooth(self):
+        self.sock.write('A'.encode())
+
+    def receivedBluetoothMessage(self):
+        while self.sock.canReadLine():
+            line = self.sock.readLine()
+            print(str(line, "utf-8"))
 
     def data_from_MK(self, data_thread):  # изменение батареи и окнок датчиков от данных с МК
         if self.cur_connection.startswith('COM'):
@@ -105,29 +130,32 @@ class App(QtWidgets.QMainWindow):
         for com in serial_ports():
             out = f'{com["port"]}: {com["desc"]}'
             self.coms.add(out)
-            self.add_device_on_screen(self.devices)
-
-    def on_start_BL(self):
-        self.ui.progressBar_2.setHidden(False)
-
-    def on_finish_BL(self):
-        self.ui.progressBar_2.setHidden(True)
-
-    def scan_progress(self, v):
-        self.ui.progressBar_2.setValue(v)
+            self.add_device_on_screen()
 
     def scan_BLE(self):  # сканирование БЛ с прогресс баром и добавлением в лист вью
-        self.BLE_handl.start()
+        self.ui.progressBar_2.setHidden(False)
+        for i in range(101):
+            self.ui.progressBar_2.setValue(i)
+            self.agent.start()
+        self.ui.progressBar_2.setHidden(True)
 
-
-    def add_device_on_screen(self, devs):  # добавляем элементы в лист вью
+    def add_device_on_screen(self):  # добавляем элементы в лист вью
         self.ui.listWidget_2.clear()
-        self.devices = devs
         # for device in self.devices:
         #     self.ui.listWidget_2.addItem(f'{device[0]}: {device[1]}')
         # сокращённый цикл для добавления элементов в лист вью
-        [self.ui.listWidget_2.addItem(f'(BL) {device[0]}: {device[1]}') for device in devs]
+        [self.ui.listWidget_2.addItem(f'(BL) {device[0]}: {device[1]}') for device in self.devices]
         [self.ui.listWidget_2.addItem(com) for com in self.coms]
+
+    def display_status(self):  # добавление БЛ устроиств в список с ними
+        dev = self.agent.discoveredDevices()
+        if len(dev) > 0:
+            # print(dev[0].name(), dev[0].address().toString())
+            self.devices.add((dev[0].name(), dev[0].address().toString()))
+            self.add_device_on_screen()
+
+    def foo(self, *args, **kwargs):  # TODO: что это???
+        pass
 
 
 if __name__ == "__main__":  # запуск всего

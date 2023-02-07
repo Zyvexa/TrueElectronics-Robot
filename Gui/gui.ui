@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>613</width>
+    <width>667</width>
     <height>467</height>
    </rect>
   </property>
@@ -56,8 +56,8 @@
          </property>
          <property name="maximumSize">
           <size>
-           <width>300</width>
-           <height>16777215</height>
+           <width>16777215</width>
+           <height>200</height>
           </size>
          </property>
          <property name="toolTip">
@@ -836,7 +836,7 @@ QProgressBar::chunk {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>613</width>
+     <width>667</width>
      <height>21</height>
     </rect>
    </property>

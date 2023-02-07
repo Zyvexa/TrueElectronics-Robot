@@ -1,3 +1,4 @@
+# not using now
 import signal
 import sys
 
@@ -19,15 +20,15 @@ class Application(QtCore.QCoreApplication):
         pass
 
     def scan_for_devices(self):
-        self.agent = QtBt.QBluetoothDeviceDiscoveryAgent(self)
-        self.agent.deviceDiscovered.connect(self.foo)
+        self.agent = QtBt.QBluetoothDeviceDiscoveryAgent(self) # 00:21:13:04:8B:32
+        self.agent.deviceDiscovered.connect(self.display_status)
         self.agent.finished.connect(self.foo)
         self.agent.error.connect(self.foo)
         self.agent.setLowEnergyDiscoveryTimeout(1000)
 
         timer = QtCore.QTimer(self.agent)
         timer.start(500)
-        timer.timeout.connect(self.display_status)
+        # timer.timeout.connect(self.display_status)
 
         self.agent.start()
 

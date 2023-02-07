@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(613, 467)
+        MainWindow.resize(667, 467)
         MainWindow.setStyleSheet("QMainWindow{\n"
 "  \n"
 "    background-color: rgb(234, 234, 234)\n"
@@ -40,7 +40,7 @@ class Ui_MainWindow(object):
         self.gridLayout_7.addWidget(self.progressBar_2, 1, 0, 1, 1)
         self.listWidget_2 = QtWidgets.QListWidget(self.frame_11)
         self.listWidget_2.setMinimumSize(QtCore.QSize(200, 120))
-        self.listWidget_2.setMaximumSize(QtCore.QSize(300, 16777215))
+        self.listWidget_2.setMaximumSize(QtCore.QSize(16777215, 200))
         self.listWidget_2.setObjectName("listWidget_2")
         self.gridLayout_7.addWidget(self.listWidget_2, 0, 0, 1, 1)
         spacerItem = QtWidgets.QSpacerItem(197, 229, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
@@ -381,7 +381,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.tabWidget, 2, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 613, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 667, 21))
         self.menubar.setObjectName("menubar")
         self.menuBluetooth = QtWidgets.QMenu(self.menubar)
         self.menuBluetooth.setObjectName("menuBluetooth")
@@ -398,7 +398,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuBluetooth.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
