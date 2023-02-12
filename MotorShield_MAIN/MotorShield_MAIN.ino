@@ -1,38 +1,3 @@
-enum MAP_point {
-  P13,
-  P14,
-  P21,
-  P22,
-  P31,
-  P32,
-  P41,
-  P42,
-  P43,
-  P51,
-  P53,
-  P61,
-  P63,
-  P64,
-  P72,
-  P74,
-  M11,
-  M12,
-  M21,
-  M22,
-  M31,
-  M32,
-  M41,
-  M42,
-  M53,
-  M54,
-  M61,
-  M62,
-  M73,
-  M74,
-  M81,
-  M82
-};
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define BACK_LEFT_MOTOR 9  // motors
@@ -45,10 +10,6 @@ enum MAP_point {
 #define RIGHT_CENTRAL_SENSOR A1
 #define LEFT_CENTRAL_SENSOR A4
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-byte my_position = P31;
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 #define SPEED 100
 
@@ -79,50 +40,6 @@ void loop() {
 }
 
 
-
-void map_worker() {
-  for (int i = 0; way[i] != -1; i++) {
-    Serial.print(way[i]);
-    Serial.print(" ");
-  }
-
-  for (int i = 0; way[i] != -1; i++) {
-    // Serial.println(way[i]);
-    if (way[i] >= M11) {
-      if (way[i] == M32) {
-        if (my_position == P43) movement(crossroad_L_turn_right);
-        else movement(crossroad_straight);
-
-      } else if (way[i] == M41) {
-        if (my_position == P41) movement(crossroad_straight);
-        else movement(crossroad_turn_left);
-
-      } else if (way[i] == M74) {
-        if (my_position == P41) movement(crossroad_turn_left);
-        else movement(crossroad_turn_right);
-
-      } else if (way[i] == M53) {  ////////////////////////////////////////////////////////////////
-        if (my_position == P61) movement(crossroad_turn_right);
-        else movement(crossroad_straight);
-
-      } else if (way[i] == M81) {
-        if (my_position == P61) movement(crossroad_turn_left);
-        else movement(crossroad_straight);
-
-      } else if (way[i] == M62) {
-        if (my_position == P63) movement(crossroad_turn_right);
-        else movement(crossroad_turn_left);
-      } else if (way[i] == M42 or way[i] == M61) {  //////////////////////////////////////////////////////////////
-        movement(crossroad_turn_right);
-      } else if (way[i] == M54 or way[i] == M73) {
-        movement(crossroad_turn_left);
-      } else {
-        movement(crossroad_straight);
-      }
-    } else movement(to_crossroad);
-    my_position = way[i];
-  }
-}
 
 
 void movement(int directions) {
