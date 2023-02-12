@@ -39,9 +39,6 @@ void loop() {
   ;
 }
 
-
-
-
 void movement(int directions) {
   switch (directions) {
     case to_crossroad:
