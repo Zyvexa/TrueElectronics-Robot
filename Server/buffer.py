@@ -7,11 +7,14 @@ class Buffer():
         if len(self.buffer) > self.buff_size:
             self.buffer.pop(-1)
         self.buffer.insert(0, data)
-        print(self.buffer)
+        # print(self.buffer)
 
     @property
     def get(self):
-        return self.buffer.pop(-1)
+        if not self.is_empty:
+            return self.buffer.pop(-1)
+        else:
+            return []
 
     @property
     def is_empty(self):
@@ -20,20 +23,21 @@ class Buffer():
 
 if __name__ == "__main__":
     buf = Buffer(buffer_size=5)
-    buf.add(1)
-    buf.add(2)
-    buf.add(3)
-    buf.add(4)
-    buf.add(5)
-    # print(buf.get)
-    buf.add(6)
-    buf.add(7)
-    # buf.add('hello')
     print(buf.get)
-    print(buf.buffer)
-    buf.add(1)
-    buf.add(2)
-    buf.add(3)
-    buf.add(4)
-    buf.add(5)
-    print(buf.buffer)
+    # buf.add(1)
+    # buf.add(2)
+    # buf.add(3)
+    # buf.add(4)
+    # buf.add(5)
+    # # print(buf.get)
+    # buf.add(6)
+    # buf.add(7)
+    # # buf.add('hello')
+    # print(buf.get)
+    # print(buf.buffer)
+    # buf.add(1)
+    # buf.add(2)
+    # buf.add(3)
+    # buf.add(4)
+    # buf.add(5)
+    # print(buf.buffer)

@@ -7,16 +7,17 @@ from buffer import Buffer
 #  о включении, на сервер.
 #  Еспшка будет отправлять данные на сервер которые он будет буферизировать(нужно подобрать оптимальный его размер).
 #  Пользователь по запросу [check] будет получать список актуальных потоков.
-#  При помощи [get data] пользователь будет получать данные из буфера
+#  При помощи [get] пользователь будет получать данные из буфера
+
 class Server():
-    def __init__(self, webServ=('192.168.1.195', 80), page_dir='pages', listen=4):
+    def __init__(self, webServ=('192.168.51.227', 80), page_dir='pages', listen=4):
         self.Whost, self.Wport = webServ
         self.page_dir = page_dir
         self.listen = listen
 
         self.buff = Buffer(buffer_size=10)
 
-        self.avalible_robots = set()
+        self.avalible_robots = {}
 
         self.WebServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.WebServer.bind((self.Whost, self.Wport))
@@ -49,10 +50,16 @@ class Server():
             self.Wclient_socket.shutdown(socket.SHUT_WR)
 
         if start_from == '[data]':
-            self.avalible_robots.add(args[1])
+            if self.avalible_robots.get(args[1]) == None:
+                self.avalible_robots.update({args[1]: Buffer(buffer_size=3)})
+            self.avalible_robots.get(args[1]).add(args[2:])
+
             print(data)
         if start_from == '[check]':
             response = ' '.join(self.avalible_robots)
+            self.Wclient_socket.send(response.encode())
+        if start_from == '[get]':
+            response = ' '.join(self.avalible_robots[args[1]].get)
             self.Wclient_socket.send(response.encode())
 
     def load_page(self, request):
