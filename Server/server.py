@@ -9,12 +9,14 @@ from buffer import Buffer
 #  Пользователь по запросу [check] будет получать список актуальных потоков.
 #  При помощи [get data] пользователь будет получать данные из буфера
 class Server():
-    def __init__(self, webServ=('localhost', 80), page_dir='pages', listen=4):
+    def __init__(self, webServ=('192.168.1.195', 80), page_dir='pages', listen=4):
         self.Whost, self.Wport = webServ
         self.page_dir = page_dir
         self.listen = listen
 
         self.buff = Buffer(buffer_size=10)
+
+        self.avalible_robots = set()
 
         self.WebServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.WebServer.bind((self.Whost, self.Wport))
@@ -39,6 +41,7 @@ class Server():
 
     def data_handler(self, data=str):
         start_from = data.split(' ')[0]
+        args = data.split(' ')
         if start_from == 'GET':
             content = self.load_page(data)
 
@@ -46,7 +49,11 @@ class Server():
             self.Wclient_socket.shutdown(socket.SHUT_WR)
 
         if start_from == '[data]':
+            self.avalible_robots.add(args[1])
             print(data)
+        if start_from == '[check]':
+            response = ' '.join(self.avalible_robots)
+            self.Wclient_socket.send(response.encode())
 
     def load_page(self, request):
         responce = ''
