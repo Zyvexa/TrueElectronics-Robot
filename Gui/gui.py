@@ -14,11 +14,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(667, 467)
+        MainWindow.resize(637, 467)
+        MainWindow.setAutoFillBackground(False)
         MainWindow.setStyleSheet("QMainWindow{\n"
 "  \n"
 "    background-color: rgb(234, 234, 234)\n"
 "}")
+        MainWindow.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -381,24 +383,23 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.tabWidget, 2, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 667, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 637, 21))
         self.menubar.setObjectName("menubar")
         self.menuBluetooth = QtWidgets.QMenu(self.menubar)
         self.menuBluetooth.setObjectName("menuBluetooth")
         MainWindow.setMenuBar(self.menubar)
-        self.actionBLEScan = QtWidgets.QAction(MainWindow)
+        self.actionNetScan = QtWidgets.QAction(MainWindow)
         font = QtGui.QFont()
         font.setPointSize(8)
-        self.actionBLEScan.setFont(font)
-        self.actionBLEScan.setObjectName("actionBLEScan")
+        self.actionNetScan.setFont(font)
+        self.actionNetScan.setObjectName("actionNetScan")
         self.actionCOMScan = QtWidgets.QAction(MainWindow)
         self.actionCOMScan.setObjectName("actionCOMScan")
-        self.menuBluetooth.addAction(self.actionBLEScan)
-        self.menuBluetooth.addAction(self.actionCOMScan)
+        self.menuBluetooth.addAction(self.actionNetScan)
         self.menubar.addAction(self.menuBluetooth.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -426,7 +427,7 @@ class Ui_MainWindow(object):
         self.pushButton_2.setText(_translate("MainWindow", "Set as black"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Statistic), _translate("MainWindow", "Сalibration"))
         self.menuBluetooth.setTitle(_translate("MainWindow", "Scaning"))
-        self.actionBLEScan.setText(_translate("MainWindow", "BLE Scan"))
-        self.actionBLEScan.setShortcut(_translate("MainWindow", "Shift+S"))
+        self.actionNetScan.setText(_translate("MainWindow", "Avalible robots"))
+        self.actionNetScan.setShortcut(_translate("MainWindow", "Shift+S"))
         self.actionCOMScan.setText(_translate("MainWindow", "COM Scan"))
         self.actionCOMScan.setShortcut(_translate("MainWindow", "Shift+C"))
