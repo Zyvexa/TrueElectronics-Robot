@@ -2,15 +2,16 @@ import socket
 from settings import *
 from buffer import Buffer
 
-'''
-TODO: сделать таймаут для удаления девайса по его истечению
- 
+# TODO: сделать таймаут для удаления девайса по его истечению
+# TODO: сделать для робота команду [recive] <my_robot_name>
+''' 
 [data] - это флаг для отправки данных с esp, после чего идёт имя esp и дальше данные в формате: 
 [data] robot_name battery_level sensor1 sensor2 sensor3 sensor4
 
 [check] - получение актуальных потоков данных, пример: 'robot_1 robot_2...robot_n'
 
 [get] - получение данных с потока, пример: [get] robot_name
+
 
 '''
 
@@ -23,17 +24,14 @@ class Server():
 
         self.page_dir = page_dir
 
-        self.avalible_robots = {}  # доступные роботы с данными
+        self.available_robots = {}  # доступные роботы с данными
 
         self.WebServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # создание сервера на сокете
         self.WebServer.bind((self.Whost, self.Wport))
         self.WebServer.listen(self.listen)
 
-    def log(self, text, status):  # логи в консоль
-        print(warn_status[status], text)
-
     def run(self):  # запуск сервера
-        self.log(f'Web server successful started on {self.Whost}:{self.Wport}', 'success')
+        log(f'Web server successful started on {self.Whost}:{self.Wport}', 'success')
         try:
             while True:
                 self.Wclient_socket, self.Waddres = self.WebServer.accept()  # подключение клиента
@@ -43,7 +41,7 @@ class Server():
 
 
         except KeyboardInterrupt:  # если прервана через Ctrl-C
-            self.log('Server shutdown', 'warning')
+            log('Server shutdown', 'warning')
             self.WebServer.close()  # остановка сервера
 
     def data_handler(self, data=str):  # обработка данных
@@ -56,21 +54,31 @@ class Server():
             self.Wclient_socket.shutdown(socket.SHUT_WR)
 
         if start_from == '[data]':  # флаг который отправляет еспшка вместе с данными
-            if self.avalible_robots.get(args[1]) == None:  # если робота нету в списке доступных девайсов
-                self.avalible_robots.update({args[1]: Buffer(buffer_size=3)})
+            if self.available_robots.get(args[1]) == None:  # если робота нету в списке доступных девайсов
+                # TODO: добавить формат данных в словаре по типу:
+                # {<robot_name>: [buffer_for_client, buffer_for_robot, timer]}
+                # таймер бдует нужен для удалению робота по истечению тайм аута
+                self.available_robots.update({args[1]: [Buffer(buffer_size=3)]})
                 # добавляем робота в словарь,
                 # и добавляем ему свой личный буфер данных
-            self.avalible_robots.get(args[1]).add(args[2:])  # добавляем данные в буфер
+            self.available_robots.get(args[1])[0].add(args[2:])  # добавляем данные в буфер
 
             print(data)
-        if start_from == '[check]':
-            # возвращаем клиенту список доступных роботов
-            response = ' '.join(self.avalible_robots)
-            self.Wclient_socket.send(response.encode())
-        if start_from == '[get]':
-            # отправляем клиенту данные из буфера
-            response = ' '.join(self.avalible_robots[args[1]].get)
-            self.Wclient_socket.send(response.encode())
+        try:
+            if start_from == '[check]':
+                # возвращаем клиенту список доступных роботов
+                if len(self.available_robots) > 0:
+                    response = ' '.join(self.available_robots)
+                    self.Wclient_socket.send(response.encode())
+                else:
+                    self.Wclient_socket.send(b'')
+                    log('no robots available for user', 'info')
+            if start_from == '[get]':
+                # отправляем клиенту данные из буфера
+                response = ' '.join(self.available_robots[args[1]][0].get)
+                self.Wclient_socket.send(response.encode())
+        except ConnectionResetError:
+            log("Connection reset ¯\_(ツ)_/¯", 'warning')
 
     def load_page(self, request):  # загрузка страницы
         responce = ''
@@ -83,5 +91,5 @@ class Server():
                 responce = file.read()
             return HDRS.encode('utf-8') + responce  # отправяем запрос вместе с данными для браузера
         except FileNotFoundError or OSError:  # если страницу в файлах найти не смогли
-            self.log('user request not existing page', 'warning')
+            log('user request not existing page', 'info')
             return (HDRS_404 + 'page not exist)').encode('utf-8')  # ошибка 404
