@@ -1,16 +1,22 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from wifi_data_thread import WifiDataHandler  # поток общения с сервером
+from wifi_scan_thread import WifiScanHandler
 import wifi  # работа с wifi
 
 from gui import Ui_MainWindow
 import sys
 
 
+# TODO: сделать .cfg файл и файл с недавними настройками, например запоминание последнего подключения юзера
+# TODO: сделать переключение языка
+
 class App(QtWidgets.QMainWindow):
     def __init__(self):
         super(App, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        self.setFixedSize(650, 467)
 
         self.devices = set()  # девайсы в списке
 
@@ -22,10 +28,13 @@ class App(QtWidgets.QMainWindow):
         self.wifi_data = WifiDataHandler(self)
         self.wifi_data.mysignal.connect(self.data_from_MK, QtCore.Qt.QueuedConnection)
 
-        self.ui.progressBar_2.setHidden(True)
+        self.wifi_scan = WifiScanHandler(self)
+        self.wifi_scan.mysignal.connect(self.available_robots, QtCore.Qt.QueuedConnection)
+
         self.ui.label_7.setText('Current mode: Default')
 
-        self.ui.actionNetScan.triggered.connect(self.avalible_robots)  # scan bluetooth devices
+        self.ui.actionNetScan.triggered.connect(self.check_available_thread)  # scan bluetooth devices
+        self.ui.actionDirretcConnection.triggered.connect(self.show_conn_dialog)
 
         self.ui.listWidget_2.itemDoubleClicked.connect(self.connect_)  # подключение к айтему на который мы кликнули
 
@@ -35,6 +44,24 @@ class App(QtWidgets.QMainWindow):
         self.ui.verticalSlider_2.sliderReleased.connect(self.slidebar_label_2)
 
         self.ui.pushButton.clicked.connect(self.apply_monitor)
+
+        self.ui.label_14.setText(f'IP: {self.host}:{self.port}')
+
+    def show_conn_dialog(self):  # ввод другого айпи и порта
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Dirrect Connection',
+                                                  'Enter HOST:PORT')
+
+        if ok:
+            entered = text.split(':')
+            dots = entered[0].split('.')
+            print(dots)
+            if len(entered) == 2 and len(dots) == 4:  # если мы ввели хост и порт, а так же в айпи 4 цифры
+                self.host, self.port = entered
+                self.ui.label_14.setText(f'IP: {self.host}:{self.port}')
+            else:
+                QtWidgets.QMessageBox.critical(self, 'Incorretc format',  # если нет, то показываем пользователю пример
+                                               'Example of parameters 192.168.1.1:80. Try again')
+                self.show_conn_dialog()
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:  # если закрываем прогу, то останавливаем поток
         self.wifi_data.isRun = False
@@ -51,10 +78,12 @@ class App(QtWidgets.QMainWindow):
         else:
             self.ui.label_7.setText('Current mode: Default')
 
-    def avalible_robots(self):
-        conn = wifi.connect(self.host, self.port)  # подключаемся к серверу
-        if conn != None:  # если всё ок, то проверяем актуальные потоки
-            self.devices = wifi.check_avalible(conn)
+    def check_available_thread(self):
+        self.wifi_scan.run()
+
+    def available_robots(self, available):
+        if available[0] != None:  # если всё ок, то проверяем актуальные потоки
+            self.devices = available
             self.add_device_on_screen()  # добавляем робота в лист вью
         else:
             self.ui.label_9.setText('Connection refused')  # если не смогли подключиться
@@ -63,6 +92,7 @@ class App(QtWidgets.QMainWindow):
         i_text = str(item.text())
         print(i_text)
         self.cur_connection = i_text  # текущее подключение ровняется тексту айтема по которому кликнули
+        self.ui.label_9.setText(f'Current Connection: {i_text}')
         self.wifi_data.start()  # запускаем поток
 
     def sensor_col(self, frame, value):  # изменение цвета от значения (от 0 до 1024)

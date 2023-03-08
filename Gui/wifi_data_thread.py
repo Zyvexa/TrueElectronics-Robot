@@ -1,10 +1,11 @@
 from PyQt5 import QtCore, QtWidgets
-from wifi import connect, parse_server
+from wifi import connect, parse_server, check_avalible
 from time import sleep
 
 
 class WifiDataHandler(QtCore.QThread):
     mysignal = QtCore.pyqtSignal(list)
+    check_signal = QtCore.pyqtSignal(list)
 
     def __init__(self, myWin, parent=None):
         QtCore.QThread.__init__(self, parent)

@@ -1,11 +1,14 @@
 import socket
 
+
 def check_avalible(conn):  # доступные потоки данных
-    conn.send(b'[check]')
-    for i in range(5):
+    if conn != None:
+        conn.send(b'[check]')
         inp = conn.recv(1024)
-        if len(inp) > 0:
+        if len(inp) > 1:
             return str(inp.decode()).split(' ')
+    else:
+        return None
 
 
 def parse_server(conn, dev):  # получение данных
@@ -19,7 +22,7 @@ def parse_server(conn, dev):  # получение данных
 
 def connect(ip, port=80):
     HOST = ip  # The server's hostname or IP address
-    PORT = port  # The port used by the server
+    PORT = int(port)  # The port used by the server
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((HOST, PORT))
@@ -27,3 +30,13 @@ def connect(ip, port=80):
     except ConnectionRefusedError:
         return None
 
+
+if __name__ == '__main__':
+    from time import sleep
+
+    while True:
+        conn = connect('31.10.97.79')
+        conn.send(b'[data] me 10 321 32 44 55')
+        # conn.send(b'[check]')
+        # print(conn.recv(1024))
+        sleep(0.5)
