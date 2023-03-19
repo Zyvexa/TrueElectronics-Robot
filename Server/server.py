@@ -4,6 +4,7 @@ from buffer import Buffer
 
 # TODO: сделать таймаут для удаления девайса по его истечению
 # TODO: сделать для робота команду [recive] <my_robot_name>
+# TODO: [send] <target_robot_name>
 ''' 
 [data] - это флаг для отправки данных с esp, после чего идёт имя esp и дальше данные в формате: 
 [data] robot_name battery_level sensor1 sensor2 sensor3 sensor4
@@ -42,18 +43,21 @@ class Server():
 
         except KeyboardInterrupt:  # если прервана через Ctrl-C
             log('Server shutdown', 'warning')
+            self.Wclient_socket.close()
             self.WebServer.close()  # остановка сервера
 
     def data_handler(self, data=str):  # обработка данных
         start_from = data.split(' ')[0]  # определение флага по типу [data], [get], [check]
         args = data.split(' ')  # аргументы
-        if start_from == 'GET':  # если зашли с браузера, то подгружаем страницу
+        if start_from not in cmds:
+            log(data, 'unknown')
+        elif start_from == 'GET':  # если зашли с браузера, то подгружаем страницу
             content = self.load_page(data)
 
             self.Wclient_socket.send(content)
             self.Wclient_socket.shutdown(socket.SHUT_WR)
 
-        if start_from == '[data]':  # флаг который отправляет еспшка вместе с данными
+        elif start_from == '[data]':  # флаг который отправляет еспшка вместе с данными
             if self.available_robots.get(args[1]) == None:  # если робота нету в списке доступных девайсов
                 # TODO: добавить формат данных в словаре по типу:
                 # {<robot_name>: [buffer_for_client, buffer_for_robot, timer]}
@@ -71,14 +75,15 @@ class Server():
                     response = ' '.join(self.available_robots)
                     self.Wclient_socket.send(response.encode())
                 else:
-                    self.Wclient_socket.send(b'')
+                    self.Wclient_socket.send(b' ')
                     log('no robots available for user', 'info')
-            if start_from == '[get]':
+            elif start_from == '[get]':
                 # отправляем клиенту данные из буфера
                 response = ' '.join(self.available_robots[args[1]][0].get)
                 self.Wclient_socket.send(response.encode())
         except ConnectionResetError:
             log("Connection reset ¯\_(ツ)_/¯", 'warning')
+
 
     def load_page(self, request):  # загрузка страницы
         responce = ''
