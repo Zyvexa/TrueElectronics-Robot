@@ -24,3 +24,5 @@ class WifiScanHandler(QtCore.QThread):
         else:
             self.mysignal.emit([None])
 
+
+

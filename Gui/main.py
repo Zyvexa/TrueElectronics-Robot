@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from wifi_data_thread import WifiDataHandler  # поток общения с сервером
 from wifi_scan_thread import WifiScanHandler
-import wifi  # работа с wifi
+from wifi_send_thread import WifiSendHandler
 
 from gui import Ui_MainWindow
 import sys
@@ -16,7 +16,7 @@ class App(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.setFixedSize(650, 467)
+        self.setFixedSize(700, 467)
 
         self.devices = set()  # девайсы в списке
 
@@ -30,6 +30,9 @@ class App(QtWidgets.QMainWindow):
 
         self.wifi_scan = WifiScanHandler(self)
         self.wifi_scan.mysignal.connect(self.available_robots, QtCore.Qt.QueuedConnection)
+
+        self.wifi_send = WifiSendHandler(self)
+        self.wifi_send.mysignal.connect(self.display_status, QtCore.Qt.QueuedConnection)
 
         self.ui.label_7.setText('Current mode: Default')
 
@@ -54,10 +57,13 @@ class App(QtWidgets.QMainWindow):
         if ok:
             entered = text.split(':')
             dots = entered[0].split('.')
-            print(dots)
             if len(entered) == 2 and len(dots) == 4:  # если мы ввели хост и порт, а так же в айпи 4 цифры
                 self.host, self.port = entered
                 self.ui.label_14.setText(f'IP: {self.host}:{self.port}')
+                # сделать очистку списка устроиств и подключения
+                self.ui.listWidget_2.clear()
+                self.devices.clear()
+                self.cur_connection = ''
             else:
                 QtWidgets.QMessageBox.critical(self, 'Incorretc format',  # если нет, то показываем пользователю пример
                                                'Example of parameters 192.168.1.1:80. Try again')
@@ -72,11 +78,22 @@ class App(QtWidgets.QMainWindow):
     def slidebar_label_2(self):
         self.ui.label_5.setText(str(self.ui.verticalSlider_2.value()))
 
-    def apply_monitor(self):  # если кнопку применения нажали, то пока что делаем визуальные изменения
+    def display_status(self, status):
+        match status:
+            case 'Ok':
+                QtWidgets.QMessageBox.information(self, 'Success', 'Sent!\t\t')
+            case 'Refused':
+                QtWidgets.QMessageBox.critical(self, 'Connection Refused', 'Failed to connect to server')
+            case 'No conn':
+                QtWidgets.QMessageBox.warning(self, 'No connection', 'Connection not selected')
         if self.ui.checkBox.isChecked():
             self.ui.label_7.setText('Current mode: Test')
         else:
             self.ui.label_7.setText('Current mode: Default')
+
+    def apply_monitor(self):  # если кнопку применения нажали, то пока что делаем визуальные изменения
+        self.data_to_send = 'lol kek'
+        self.wifi_send.run()
 
     def check_available_thread(self):
         self.wifi_scan.run()
@@ -90,7 +107,6 @@ class App(QtWidgets.QMainWindow):
 
     def connect_(self, item):  # двойное нажатие на айтем в лист вью и адрес добавляется в текущее подключение
         i_text = str(item.text())
-        print(i_text)
         self.cur_connection = i_text  # текущее подключение ровняется тексту айтема по которому кликнули
         self.ui.label_9.setText(f'Current Connection: {i_text}')
         self.wifi_data.start()  # запускаем поток
@@ -104,7 +120,7 @@ class App(QtWidgets.QMainWindow):
 
     def data_from_MK(self, data_thread):  # изменение батареи и окнок датчиков от данных с МК
         data = data_thread
-        print(data)  # signal from thread
+        # print(data)  # signal from thread
         if len(data) > 1:
             self.ui.progressBar.setValue(int(data[0]))
             # цвет в зависимости от показаний датчика от 0 до 1024

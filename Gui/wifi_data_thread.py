@@ -14,12 +14,15 @@ class WifiDataHandler(QtCore.QThread):
 
     def run(self):
         self.prew_conn = self.myWin.cur_connection  # предыдущее
+        self.prew_host = (self.myWin.host, self.myWin.port)
         while self.isRun:
             self.conn = connect(self.myWin.host, self.myWin.port)  # подключаемся
-            if self.prew_conn != self.myWin.cur_connection:  # если подключение изменилось
+            if self.prew_conn != self.myWin.cur_connection \
+                    and (self.myWin.host, self.myWin.port) != self.prew_host:  # если подключение изменилось
                 self.conn.close()  # отключаемся от потока
                 break
-            if self.prew_conn == self.myWin.cur_connection:  # если ничего не менялось
+            if self.prew_conn == self.myWin.cur_connection \
+                    and (self.myWin.host, self.myWin.port) == self.prew_host:  # если ничего не менялось
                 out = parse_server(self.conn, self.myWin.cur_connection)  # получаем данные
                 print(out)
                 self.mysignal.emit(out)

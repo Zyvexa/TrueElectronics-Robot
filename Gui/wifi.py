@@ -27,7 +27,7 @@ def connect(ip, port=80):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((HOST, PORT))
         return s
-    except ConnectionRefusedError:
+    except ConnectionRefusedError or TimeoutError:
         return None
 
 
