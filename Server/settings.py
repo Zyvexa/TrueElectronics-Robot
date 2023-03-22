@@ -14,7 +14,7 @@ warn_status = {'error': f'{Fore.RESET}[{Fore.RED}!{Fore.RESET}]{Fore.RED}',
 def log(text, status):  # логи в консоль
     print(warn_status[status], text + Fore.RESET)
 
-cmds = ['[data]', 'GET', '[check]', '[get]']
+cmds = ['[data]', 'GET', '[check]', '[get]', '[send]', '[receive]']
 
 # успешный ответ для браузера
 HDRS = 'HTTP/1.1 200  OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n'
