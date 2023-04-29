@@ -1,22 +1,72 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
 from wifi_data_thread import WifiDataHandler  # поток общения с сервером
 from wifi_scan_thread import WifiScanHandler
 from wifi_send_thread import WifiSendHandler
 
-from gui import Ui_MainWindow
+from qframelesswindow import FramelessMainWindow, TitleBar
+from blurWindow import blur
+
+from gui_v2 import Ui_MainWindow
 import sys
 
 
 # TODO: сделать .cfg файл и файл с недавними настройками, например запоминание последнего подключения юзера
 # TODO: сделать переключение языка
 
-class App(QtWidgets.QMainWindow):
+class CustomTitleBar(TitleBar):
+    """ Custom title bar """
+
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        # customize the style of title bar button
+        self.minBtn.setHoverColor(Qt.white)
+        self.minBtn.setHoverBackgroundColor(QtGui.QColor(0, 100, 182))
+        self.minBtn.setPressedColor(Qt.white)
+        self.minBtn.setPressedBackgroundColor(QtGui.QColor(54, 57, 65))
+
+        # use qss to customize title bar button
+        self.maxBtn.setStyleSheet("""
+            TitleBarButton {
+                qproperty-normalColor: black;
+                qproperty-normalBackgroundColor: transparent;
+                qproperty-hoverColor: white;
+                qproperty-hoverBackgroundColor: transparent;
+                qproperty-pressedColor: white;
+                qproperty-pressedBackgroundColor: rgb(54, 57, 65);
+            }
+        """)
+        self.minBtn.setStyleSheet("""
+            TitleBarButton {
+                qproperty-normalColor: black;
+                qproperty-normalBackgroundColor: transparent;
+                qproperty-hoverColor: white;
+                qproperty-hoverBackgroundColor: transparent;
+                qproperty-pressedColor: white;
+                qproperty-pressedBackgroundColor: rgb(54, 57, 65);
+            }
+        """)
+
+
+class App(FramelessMainWindow):
     def __init__(self):
         super(App, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
+        self.titleBar.raise_()
+        self.setTitleBar(CustomTitleBar(self))
         self.setFixedSize(700, 467)
+        # self.setStyleSheet('background: transparent;')
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        blur(self.winId())
+
+        self.ui.toolBar.setMovable(False)
+        self.ui.toolBar.setStyleSheet('''background: transparent;
+                                         border-color: transparent;
+                                         color: rgb(190, 252, 255);
+                                         font-size: 12px;''')
 
         self.devices = set()  # девайсы в списке
 
@@ -24,6 +74,8 @@ class App(QtWidgets.QMainWindow):
         self.port = 80
 
         self.cur_connection = ''
+
+        self.cur_progr_col = [85, 210, 85]  # color with 100%
 
         self.wifi_data = WifiDataHandler(self)
         self.wifi_data.mysignal.connect(self.data_from_MK, QtCore.Qt.QueuedConnection)
@@ -51,8 +103,10 @@ class App(QtWidgets.QMainWindow):
         self.ui.label_14.setText(f'IP: {self.host}:{self.port}')
 
     def show_conn_dialog(self):  # ввод другого айпи и порта
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Dirrect Connection',
-                                                  'Enter HOST:PORT')
+        dialog = QtWidgets.QInputDialog()
+        dialog.setStyleSheet('background-color: rgb(190, 252, 255)')
+        text, ok = dialog.getText(self, 'Dirrect Connection',
+                                        'Enter HOST:PORT')
 
         if ok:
             entered = text.split(':')
@@ -123,6 +177,7 @@ class App(QtWidgets.QMainWindow):
         # print(data)  # signal from thread
         if len(data) > 1:
             self.ui.progressBar.setValue(int(data[0]))
+
             # цвет в зависимости от показаний датчика от 0 до 1024
             self.sensor_col(self.ui.frame_6, int(data[1]))  # top sensor
             self.sensor_col(self.ui.frame_18, int(data[1]))
