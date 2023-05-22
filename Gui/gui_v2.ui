@@ -330,8 +330,7 @@ QProgressBar::chunk {
       </widget>
       <widget class="QWidget" name="Statistic">
        <property name="styleSheet">
-        <string notr="true">
-</string>
+        <string notr="true"/>
        </property>
        <attribute name="title">
         <string>Сalibration</string>
@@ -753,11 +752,6 @@ color: rgb(190, 252, 255);</string>
 border-color: rgb(190, 252, 255);
 color: rgb(190, 252, 255);</string>
          </property>
-         <item>
-          <property name="text">
-           <string>New Item</string>
-          </property>
-         </item>
         </widget>
        </item>
        <item row="4" column="0" rowspan="2">
@@ -1025,10 +1019,11 @@ color: rgb(190, 252, 255);</string>
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>true</bool>
+    <bool>false</bool>
    </attribute>
    <addaction name="actionNetScan"/>
    <addaction name="actionDirretcConnection"/>
+   <addaction name="actionReser_Settings"/>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -1073,6 +1068,11 @@ color: rgb(190, 252, 255);</string>
    </property>
    <property name="shortcut">
     <string>Shift+D</string>
+   </property>
+  </action>
+  <action name="actionReser_Settings">
+   <property name="text">
+    <string>Reser Settings</string>
    </property>
   </action>
  </widget>

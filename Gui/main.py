@@ -6,6 +6,7 @@ from wifi_send_thread import WifiSendHandler
 
 from qframelesswindow import FramelessMainWindow, TitleBar
 from blurWindow import blur
+from config import check_exist, load_config, save_config
 
 from gui_v2 import Ui_MainWindow
 import sys
@@ -69,9 +70,8 @@ class App(FramelessMainWindow):
                                          font-size: 12px;''')
 
         self.devices = set()  # девайсы в списке
-
-        self.host = '31.10.97.79'
-        self.port = 80
+        check_exist('config.ini')
+        self.host, self.port = load_config('config.ini')
 
         self.cur_connection = ''
 
@@ -90,6 +90,7 @@ class App(FramelessMainWindow):
 
         self.ui.actionNetScan.triggered.connect(self.check_available_thread)  # scan bluetooth devices
         self.ui.actionDirretcConnection.triggered.connect(self.show_conn_dialog)
+        self.ui.actionReser_Settings.triggered.connect(self.reset_settings)
 
         self.ui.listWidget_2.itemDoubleClicked.connect(self.connect_)  # подключение к айтему на который мы кликнули
 
@@ -102,8 +103,14 @@ class App(FramelessMainWindow):
 
         self.ui.label_14.setText(f'IP: {self.host}:{self.port}')
 
+    def reset_settings(self):
+        self.host, self.port = load_config(default=True)
+        self.ui.label_14.setText(f'IP: {self.host}:{self.port}')
+        save_config({'host': self.host, 'port': self.port})
+
     def show_conn_dialog(self):  # ввод другого айпи и порта
         dialog = QtWidgets.QInputDialog()
+        print(dialog.actions())
         dialog.setStyleSheet('background-color: rgb(190, 252, 255)')
         text, ok = dialog.getText(self, 'Dirrect Connection',
                                         'Enter HOST:PORT')
@@ -113,6 +120,7 @@ class App(FramelessMainWindow):
             dots = entered[0].split('.')
             if len(entered) == 2 and len(dots) == 4:  # если мы ввели хост и порт, а так же в айпи 4 цифры
                 self.host, self.port = entered
+                save_config({'host': self.host, 'port': self.port})
                 self.ui.label_14.setText(f'IP: {self.host}:{self.port}')
                 # сделать очистку списка устроиств и подключения
                 self.ui.listWidget_2.clear()
@@ -122,6 +130,7 @@ class App(FramelessMainWindow):
                 QtWidgets.QMessageBox.critical(self, 'Incorretc format',  # если нет, то показываем пользователю пример
                                                'Example of parameters 192.168.1.1:80. Try again')
                 self.show_conn_dialog()
+        print(ok)
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:  # если закрываем прогу, то останавливаем поток
         self.wifi_data.isRun = False
