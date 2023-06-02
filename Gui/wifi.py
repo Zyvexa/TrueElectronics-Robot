@@ -25,9 +25,10 @@ def connect(ip, port=80):
     PORT = int(port)  # The port used by the server
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(1)
         s.connect((HOST, PORT))
         return s
-    except ConnectionRefusedError or TimeoutError:
+    except TimeoutError:
         return None
 
 
