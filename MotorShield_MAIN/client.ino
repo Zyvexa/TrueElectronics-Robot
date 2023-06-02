@@ -4,11 +4,11 @@
 #define SPACE   " "
 #define ME      "robot_1"
 
-#define PORT    80
-#define SSId    "babay"
-#define PASS    "89197275518"
+//#define SSId   "robotics"
+//#define PASS   "17122018"
 
 #define HOST    "31.10.97.79"
+#define PORT    80
 
 #define T_BASE  250
 
@@ -27,6 +27,14 @@
   PASS    "89197275518";
 */
 
+
+int net_size = 4;
+String nets[4][2] = {{"robotics", "17122018"},
+  {"default", "g1s2o3m4"},
+  {"Galaxy", "11111111"},
+  {"babay", "89197275518"}
+};
+
 int start_;
 
 byte battery = 100;
@@ -43,17 +51,22 @@ WiFiClient client;
 
 void setup() {
   Serial.begin(115200);
-  WiFi.begin(SSId, PASS);
-  while (WiFi.status() != WL_CONNECTED) {
+  //  WiFi.begin(nets[0][0], nets[0][1]);
+  for (int i; i < net_size; i++) {
     delay(1000);
-    Serial.println("Connecting to WiFi...");
+    Serial.println("Connecting to " + nets[i][0] + ": " + nets[i][1]);
+    WiFi.begin(nets[i][0], nets[i][1]);
   }
-  Serial.println("Connected to WiFi");
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("Connected to " + nets[i][0] + ": " + nets[i][1]);
+  }
 }
 
-void loop() {
 
-    delay(T_BASE);
+
+
+void loop() {
+  delay(T_BASE);
   conn();
 
 
@@ -94,6 +107,8 @@ void send_all() // отправка пакета данных с датчико�
     battery --;
     i = 0;
   }
+  if (battery > 100)
+    battery = 100;
 
   sensor1 = random(0, 1024);
   sensor2 = random(0, 1024);
@@ -101,5 +116,5 @@ void send_all() // отправка пакета данных с датчико�
   sensor4 = random(0, 1024);
 
   client.print(String("[data] ") + ME + SPACE + battery + SPACE + sensor1 + SPACE + sensor2 + SPACE + sensor3 + SPACE + sensor4);
-
+  //    Serial.println("> " + Receive());
 }
